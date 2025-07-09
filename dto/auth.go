@@ -1,0 +1,23 @@
+package dto
+
+import "github.com/MegeKaplan/megebase-identity-service/models"
+
+type RegisterRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=6"`
+}
+
+type RegisterResponse struct {
+	Token string      `json:"token"`
+	User  models.User `json:"user"`
+}
+
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+type LoginResponse struct {
+	Token string      `json:"token"`
+	User  models.User `json:"user"`
+}
