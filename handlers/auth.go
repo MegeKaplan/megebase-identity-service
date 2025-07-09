@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/MegeKaplan/megebase-identity-service/dto"
 	"github.com/MegeKaplan/megebase-identity-service/models"
+	"github.com/MegeKaplan/megebase-identity-service/utils"
+	"github.com/MegeKaplan/megebase-identity-service/utils/response"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -15,10 +16,7 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 		var body dto.RegisterRequest
 
 		if err := c.ShouldBindJSON(&body); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"message": "invalid json",
-				"error":   err.Error(),
-			})
+			utils.JSONError(c, response.ErrInvalidJSON, err.Error())
 			return
 		}
 
@@ -29,7 +27,7 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 
 		log.Printf("email: %s, password: %s", user.Email, user.Password)
 
-		c.JSON(http.StatusOK, dto.RegisterResponse{
+		utils.JSONSuccess(c, response.UserRegistered, dto.RegisterResponse{
 			Token: "jwt",
 			User:  user,
 		})
@@ -41,10 +39,7 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 		var body dto.LoginRequest
 
 		if err := c.ShouldBindJSON(&body); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"message": "invalid json",
-				"error":   err.Error(),
-			})
+			utils.JSONError(c, response.ErrInvalidJSON, err.Error())
 			return
 		}
 
@@ -55,7 +50,7 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 
 		log.Printf("email: %s, password: %s", user.Email, user.Password)
 
-		c.JSON(http.StatusOK, dto.LoginResponse{
+		utils.JSONSuccess(c, response.UserLoggedIn, dto.LoginResponse{
 			Token: "jwt",
 			User:  user,
 		})

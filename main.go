@@ -11,7 +11,10 @@ import (
 func main() {
 	r := gin.Default()
 
-	db := database.Connect()
+	db, err := database.Connect()
+	if err != nil {
+		panic(err.Error())
+	}
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "Hello world!")
@@ -22,6 +25,6 @@ func main() {
 		authRoutes.POST("/register", handlers.Register(db))
 		authRoutes.POST("/login", handlers.Login(db))
 	}
-	
+
 	r.Run(":8080")
 }

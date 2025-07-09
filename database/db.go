@@ -5,12 +5,13 @@ import (
 	"os"
 
 	"github.com/MegeKaplan/megebase-identity-service/models"
+	"github.com/MegeKaplan/megebase-identity-service/utils/response"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func Connect() *gorm.DB {
+func Connect() (*gorm.DB, error) {
 	err := godotenv.Load()
 	if err != nil {
 		panic("failed to load .env file: " + err.Error())
@@ -28,12 +29,12 @@ func Connect() *gorm.DB {
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect to the database: " + err.Error())
+		return nil, response.ErrDBConnection
 	}
 
 	if err := db.AutoMigrate(&models.User{}); err != nil {
-		panic("failed to migrate database: " + err.Error())
+		return nil, response.ErrDBMigration
 	}
 
-	return db
+	return db, nil
 }
