@@ -58,3 +58,12 @@ var (
 		HTTPStatus: 500,
 	}
 )
+
+// Hashing Errors
+var (
+	ErrPasswordHashingFailed = &AppError{
+		Code:       "PASSWORD_HASHING_ERROR",
+		Message:    "Failed to hash password",
+		HTTPStatus: 500,
+	}
+)
