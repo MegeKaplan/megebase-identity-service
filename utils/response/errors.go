@@ -36,6 +36,12 @@ var (
 		Message:    "Email not found",
 		HTTPStatus: 404,
 	}
+
+	ErrUnauthorized = &AppError{
+		Code:       "UNAUTHORIZED",
+		Message:    "Unauthorized",
+		HTTPStatus: 401,
+	}
 )
 
 // Database Errors
@@ -65,5 +71,26 @@ var (
 		Code:       "PASSWORD_HASHING_ERROR",
 		Message:    "Failed to hash password",
 		HTTPStatus: 500,
+	}
+)
+
+// Token Generation Errors
+var (
+	ErrTokenGenerationFailed = &AppError{
+		Code:       "TOKEN_GENERATION_FAILED",
+		Message:    "Failed to generate token",
+		HTTPStatus: 500,
+	}
+
+	ErrInvalidSigningMethod = &AppError{
+		Code:       "INVALID_SIGNING_METHOD",
+		Message:    "Unexpected signing method",
+		HTTPStatus: 401,
+	}
+
+	ErrInvalidToken = &AppError{
+		Code:       "INVALID_TOKEN",
+		Message:    "Token is invalid or expired",
+		HTTPStatus: 401,
 	}
 )

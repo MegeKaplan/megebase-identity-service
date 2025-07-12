@@ -24,8 +24,14 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		token, err := utils.GenerateJWT(createdUser.ID, createdUser.Email)
+		if err != nil {
+			utils.JSONError(c, err, err.Details)
+			return
+		}
+
 		utils.JSONSuccess(c, response.UserRegistered, dto.RegisterResponse{
-			Token: "jwt",
+			Token: token,
 			User:  createdUser,
 		})
 	}
@@ -46,8 +52,14 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		token, err := utils.GenerateJWT(existingUser.ID, existingUser.Email)
+		if err != nil {
+			utils.JSONError(c, err, err.Details)
+			return
+		}
+
 		utils.JSONSuccess(c, response.UserLoggedIn, dto.LoginResponse{
-			Token: "jwt",
+			Token: token,
 			User:  existingUser,
 		})
 	}
