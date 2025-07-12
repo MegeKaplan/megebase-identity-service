@@ -7,11 +7,16 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterUser(db *gorm.DB, user models.User) (models.User, *response.AppError) {
+func RegisterUser(db *gorm.DB, body dto.RegisterRequest) (models.User, *response.AppError) {
 	var existingUser models.User
 
-	if err := db.First(&existingUser, "email = ?", user.Email).Error; err == nil {
+	if err := db.First(&existingUser, "email = ?", body.Email).Error; err == nil {
 		return models.User{}, response.ErrEmailAlreadyExists
+	}
+
+	user := models.User{
+		Email:    body.Email,
+		Password: body.Password,
 	}
 
 	if err := db.Create(&user).Error; err != nil {
