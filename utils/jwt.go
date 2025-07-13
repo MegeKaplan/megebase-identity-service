@@ -8,14 +8,18 @@ import (
 	"github.com/MegeKaplan/megebase-identity-service/utils/response"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 )
 
-var jwtSecret []byte
-var jwtExpireHours int
+var (
+	jwtSecret      []byte
+	jwtExpireHours int
+	isInitialized bool = false
+)
 
-func init() {
-	_ = godotenv.Load()
+func ConfigureJWT() {
+	if isInitialized {
+		return
+	}
 
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
@@ -35,6 +39,8 @@ func init() {
 	}
 
 	jwtExpireHours = expireHours
+
+	isInitialized = true
 }
 
 type JWTClaim struct {
@@ -44,6 +50,7 @@ type JWTClaim struct {
 }
 
 func GenerateJWT(userID uuid.UUID, email string) (string, *response.AppError) {
+	ConfigureJWT()
 	claims := JWTClaim{
 		UserID: userID,
 		Email:  email,
@@ -65,6 +72,7 @@ func GenerateJWT(userID uuid.UUID, email string) (string, *response.AppError) {
 }
 
 func ValidateJWT(tokenString string) (*JWTClaim, *response.AppError) {
+	ConfigureJWT()
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaim{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, response.ErrInvalidSigningMethod

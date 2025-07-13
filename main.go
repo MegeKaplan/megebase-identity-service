@@ -6,7 +6,15 @@ import (
 	"github.com/MegeKaplan/megebase-identity-service/database"
 	"github.com/MegeKaplan/megebase-identity-service/handlers"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		panic("Failed to load .env file")
+	}
+}
 
 func main() {
 	r := gin.Default()
