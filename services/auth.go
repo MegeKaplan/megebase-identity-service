@@ -3,21 +3,20 @@ package services
 import (
 	"github.com/MegeKaplan/megebase-identity-service/dto"
 	"github.com/MegeKaplan/megebase-identity-service/models"
+	"github.com/MegeKaplan/megebase-identity-service/repositories"
 	"github.com/MegeKaplan/megebase-identity-service/utils"
 	"github.com/MegeKaplan/megebase-identity-service/utils/response"
-	"gorm.io/gorm"
 )
 
-func RegisterUser(db *gorm.DB, body dto.RegisterRequest) (models.User, *response.AppError) {
-	var existingUser models.User
-
-	if err := db.First(&existingUser, "email = ?", body.Email).Error; err == nil {
+func RegisterUser(repo repositories.UserRepository, body dto.RegisterRequest) (models.User, *response.AppError) {
+	_, err := repo.FindByEmail(body.Email)
+	if err == nil {
 		return models.User{}, response.ErrEmailAlreadyExists
 	}
 
 	hashedPassword, err := utils.HashPassword(body.Password)
-	if err != nil {
-		return models.User{}, err
+	if err.(*response.AppError) != nil {
+		return models.User{}, err.(*response.AppError)
 	}
 
 	user := models.User{
@@ -25,17 +24,16 @@ func RegisterUser(db *gorm.DB, body dto.RegisterRequest) (models.User, *response
 		Password: hashedPassword,
 	}
 
-	if err := db.Create(&user).Error; err != nil {
+	if err := repo.Create(&user); err != nil {
 		return models.User{}, response.ErrDBOperation
 	}
 
 	return user, nil
 }
 
-func LoginUser(db *gorm.DB, body dto.LoginRequest) (models.User, *response.AppError) {
-	var existingUser models.User
-
-	if err := db.First(&existingUser, "email = ?", body.Email).Error; err != nil {
+func LoginUser(repo repositories.UserRepository, body dto.LoginRequest) (models.User, *response.AppError) {
+	existingUser, err := repo.FindByEmail(body.Email)
+	if err != nil {
 		return models.User{}, response.ErrEmailNotFound
 	}
 

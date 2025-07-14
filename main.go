@@ -5,6 +5,7 @@ import (
 
 	"github.com/MegeKaplan/megebase-identity-service/database"
 	"github.com/MegeKaplan/megebase-identity-service/handlers"
+	"github.com/MegeKaplan/megebase-identity-service/repositories"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -24,14 +25,16 @@ func main() {
 		panic(err.Error())
 	}
 
+	userRepo := repositories.NewUserGormRepository(db)
+
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "Hello world!")
 	})
 
 	authRoutes := r.Group("/auth")
 	{
-		authRoutes.POST("/register", handlers.Register(db))
-		authRoutes.POST("/login", handlers.Login(db))
+		authRoutes.POST("/register", handlers.Register(userRepo))
+		authRoutes.POST("/login", handlers.Login(userRepo))
 	}
 
 	r.Run(":8080")

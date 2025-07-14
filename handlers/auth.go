@@ -2,14 +2,14 @@ package handlers
 
 import (
 	"github.com/MegeKaplan/megebase-identity-service/dto"
+	"github.com/MegeKaplan/megebase-identity-service/repositories"
 	"github.com/MegeKaplan/megebase-identity-service/services"
 	"github.com/MegeKaplan/megebase-identity-service/utils"
 	"github.com/MegeKaplan/megebase-identity-service/utils/response"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-func Register(db *gorm.DB) gin.HandlerFunc {
+func Register(repo repositories.UserRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body dto.RegisterRequest
 
@@ -18,7 +18,7 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		createdUser, err := services.RegisterUser(db, body)
+		createdUser, err := services.RegisterUser(repo, body)
 		if err != nil {
 			utils.JSONError(c, err, err.Details)
 			return
@@ -37,7 +37,7 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-func Login(db *gorm.DB) gin.HandlerFunc {
+func Login(repo repositories.UserRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body dto.LoginRequest
 
@@ -46,7 +46,7 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		existingUser, err := services.LoginUser(db, body)
+		existingUser, err := services.LoginUser(repo, body)
 		if err != nil {
 			utils.JSONError(c, err, err.Details)
 			return
