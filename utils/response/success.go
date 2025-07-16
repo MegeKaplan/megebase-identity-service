@@ -23,3 +23,18 @@ var (
 		HTTPStatus: http.StatusOK,
 	}
 )
+
+// OTP
+var (
+	OTPSent = &AppSuccess{
+		Code:       "OTP_SENT",
+		Message:    "OTP sent successfully",
+		HTTPStatus: http.StatusOK,
+	}
+
+	OTPVerified = &AppSuccess{
+		Code:       "OTP_VERIFIED",
+		Message:    "OTP verified successfully",
+		HTTPStatus: http.StatusOK,
+	}
+)

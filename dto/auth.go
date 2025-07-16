@@ -4,7 +4,8 @@ import "github.com/MegeKaplan/megebase-identity-service/models"
 
 type RegisterRequest struct {
 	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
+	Password string `json:"password" binding:"min=6"`
+	OTP      string `json:"otp" binding:"required"`
 }
 
 type RegisterResponse struct {

@@ -96,3 +96,42 @@ var (
 		HTTPStatus: http.StatusUnauthorized,
 	}
 )
+
+// OTP Errors
+var (
+	ErrOTPSentRecently = &AppError{
+		Code:       "OTP_SENT_RECENTLY",
+		Message:    "OTP has been sent recently, please try again later",
+		HTTPStatus: http.StatusTooManyRequests,
+	}
+
+	ErrOTPSendFailed = &AppError{
+		Code:       "OTP_SEND_FAILED",
+		Message:    "Failed to send OTP",
+		HTTPStatus: http.StatusInternalServerError,
+	}
+
+	ErrOTPGenerationFailed = &AppError{
+		Code:       "OTP_GENERATION_FAILED",
+		Message:    "Failed to generate OTP",
+		HTTPStatus: http.StatusInternalServerError,
+	}
+
+	ErrInvalidOTP = &AppError{
+		Code:       "INVALID_OTP",
+		Message:    "Invalid OTP",
+		HTTPStatus: http.StatusBadRequest,
+	}
+
+	ErrOTPExpired = &AppError{
+		Code:       "OTP_EXPIRED",
+		Message:    "OTP has expired",
+		HTTPStatus: http.StatusBadRequest,
+	}
+
+	ErrOTPNotFound = &AppError{
+		Code:       "OTP_NOT_FOUND",
+		Message:    "OTP not found for the provided email",
+		HTTPStatus: http.StatusNotFound,
+	}
+)

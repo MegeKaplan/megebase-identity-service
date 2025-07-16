@@ -26,6 +26,7 @@ func main() {
 	}
 
 	userRepo := repositories.NewUserGormRepository(db)
+	otpRepo := repositories.NewInMemoryOTPRepository()
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "Hello world!")
@@ -33,7 +34,9 @@ func main() {
 
 	authRoutes := r.Group("/auth")
 	{
-		authRoutes.POST("/register", handlers.Register(userRepo))
+		authRoutes.POST("/register", handlers.Register(userRepo, otpRepo))
+		authRoutes.POST("/register/send-otp", handlers.SendOTP(otpRepo))
+		authRoutes.POST("/register/verify-otp", handlers.VerifyOTP(otpRepo))
 		authRoutes.POST("/login", handlers.Login(userRepo))
 	}
 

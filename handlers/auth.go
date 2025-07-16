@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Register(repo repositories.UserRepository) gin.HandlerFunc {
+func Register(userRepo repositories.UserRepository, otpRepo repositories.OTPRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body dto.RegisterRequest
 
@@ -18,7 +18,18 @@ func Register(repo repositories.UserRepository) gin.HandlerFunc {
 			return
 		}
 
-		createdUser, err := services.RegisterUser(repo, body)
+		isValid, err := services.VerifyOTP(otpRepo, body.Email, body.OTP)
+		if err != nil {
+			utils.JSONError(c, err, err.Details)
+			return
+		}
+
+		if !isValid {
+			utils.JSONError(c, response.ErrInvalidOTP, "")
+			return
+		}
+
+		createdUser, err := services.RegisterUser(userRepo, body)
 		if err != nil {
 			utils.JSONError(c, err, err.Details)
 			return
@@ -62,5 +73,47 @@ func Login(repo repositories.UserRepository) gin.HandlerFunc {
 			Token: token,
 			User:  existingUser,
 		})
+	}
+}
+
+func SendOTP(repo repositories.OTPRepository) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var body dto.SendOTPRequest
+
+		if err := c.ShouldBindJSON(&body); err != nil {
+			utils.JSONError(c, response.ErrInvalidJSON, err.Error())
+			return
+		}
+
+		if err := services.SendOTP(repo, body); err != nil {
+			utils.JSONError(c, err, err.Details)
+			return
+		}
+
+		utils.JSONSuccess(c, response.OTPSent, nil)
+	}
+}
+
+func VerifyOTP(repo repositories.OTPRepository) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var body dto.VerifyOTPRequest
+
+		if err := c.ShouldBindJSON(&body); err != nil {
+			utils.JSONError(c, response.ErrInvalidJSON, err.Error())
+			return
+		}
+
+		isValid, err := services.VerifyOTP(repo, body.Email, body.OTP)
+		if err != nil {
+			utils.JSONError(c, err, err.Details)
+			return
+		}
+
+		if !isValid {
+			utils.JSONError(c, response.ErrInvalidOTP, "")
+			return
+		}
+
+		utils.JSONSuccess(c, response.OTPVerified, nil)
 	}
 }
