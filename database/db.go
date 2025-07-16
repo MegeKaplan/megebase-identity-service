@@ -6,17 +6,11 @@ import (
 
 	"github.com/MegeKaplan/megebase-identity-service/models"
 	"github.com/MegeKaplan/megebase-identity-service/utils/response"
-	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func Connect() (*gorm.DB, error) {
-	err := godotenv.Load()
-	if err != nil {
-		panic("failed to load .env file: " + err.Error())
-	}
-
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
 		os.Getenv("DB_HOST"),
