@@ -12,14 +12,14 @@ type AppSuccess struct {
 // Auth
 var (
 	UserRegistered = &AppSuccess{
-		HTTPStatus: http.StatusCreated,
 		Code:       "USER_REGISTERED",
 		Message:    "User registered successfully",
+		HTTPStatus: http.StatusCreated,
 	}
 
 	UserLoggedIn = &AppSuccess{
-		HTTPStatus: http.StatusOK,
 		Code:       "USER_LOGGED_IN",
 		Message:    "User logged in successfully",
+		HTTPStatus: http.StatusOK,
 	}
 )
