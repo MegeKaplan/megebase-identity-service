@@ -68,7 +68,7 @@ func SendOTP(repo repositories.OTPRepository, body dto.SendOTPRequest) *response
 		return response.ErrDBOperation
 	}
 
-	if err := utils.SendOTP(otp, body.Email); err != nil {
+	if err := utils.SendOTP("email", body.Email, otp); err != nil {
 		return response.ErrOTPSendFailed
 	}
 

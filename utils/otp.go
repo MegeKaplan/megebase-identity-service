@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+
+	"github.com/MegeKaplan/megebase-identity-service/messaging"
 )
 
 func GenerateOTP() (string, error) {
@@ -17,7 +19,21 @@ func GenerateOTP() (string, error) {
 	return otp, nil
 }
 
-func SendOTP(otp string, to string) error {
-	fmt.Printf("Sending OTP %s to %s\n", otp, to)
+func SendOTP(channel string, to string, otp string) error {
+	msg := messaging.MessageEvent{
+		Service: "identity",
+		Entity:  "otp",
+		Action:  "sent",
+		Channel: channel,
+		To:      to,
+		Data: map[string]interface{}{
+			"otp": otp,
+		},
+	}
+
+	if err := messaging.PublishMessage(msg); err != nil {
+		return err
+	}
+
 	return nil
 }

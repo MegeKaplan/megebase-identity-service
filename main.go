@@ -5,6 +5,7 @@ import (
 
 	"github.com/MegeKaplan/megebase-identity-service/database"
 	"github.com/MegeKaplan/megebase-identity-service/handlers"
+	"github.com/MegeKaplan/megebase-identity-service/messaging"
 	"github.com/MegeKaplan/megebase-identity-service/repositories"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -25,6 +26,11 @@ func main() {
 		panic(err.Error())
 	}
 
+	if err := messaging.StartProducer(); err != nil {
+		panic(err.Error())
+	}
+	defer messaging.CloseProducer()
+	
 	userRepo := repositories.NewUserGormRepository(db)
 	otpRepo := repositories.NewInMemoryOTPRepository()
 
