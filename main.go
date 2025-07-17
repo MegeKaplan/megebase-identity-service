@@ -7,6 +7,7 @@ import (
 	"github.com/MegeKaplan/megebase-identity-service/handlers"
 	"github.com/MegeKaplan/megebase-identity-service/messaging"
 	"github.com/MegeKaplan/megebase-identity-service/repositories"
+	"github.com/MegeKaplan/megebase-identity-service/services"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -26,13 +27,18 @@ func main() {
 		panic(err.Error())
 	}
 
-	if err := messaging.StartProducer(); err != nil {
+	rabbitMQService, err := messaging.NewRabbitMQService("megebase.topic")
+	if err != nil {
 		panic(err.Error())
 	}
-	defer messaging.CloseProducer()
-	
+	defer rabbitMQService.Close()
+
 	userRepo := repositories.NewUserGormRepository(db)
 	otpRepo := repositories.NewInMemoryOTPRepository()
+
+	authService := services.NewAuthService(userRepo, otpRepo, rabbitMQService)
+
+	authHandler := handlers.NewAuthHandler(authService)
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "Hello world!")
@@ -40,10 +46,10 @@ func main() {
 
 	authRoutes := r.Group("/auth")
 	{
-		authRoutes.POST("/register", handlers.Register(userRepo, otpRepo))
-		authRoutes.POST("/register/send-otp", handlers.SendOTP(otpRepo))
-		authRoutes.POST("/register/verify-otp", handlers.VerifyOTP(otpRepo))
-		authRoutes.POST("/login", handlers.Login(userRepo))
+		authRoutes.POST("/register", authHandler.Register())
+		authRoutes.POST("/register/send-otp", authHandler.SendOTP())
+		authRoutes.POST("/register/verify-otp", authHandler.VerifyOTP())
+		authRoutes.POST("/login", authHandler.Login())
 	}
 
 	r.Run(":8080")

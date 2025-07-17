@@ -8,32 +8,32 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-var (
-	conn *amqp.Connection
-	ch   *amqp.Channel
-	// q    amqp.Queue
-)
+type rabbitMQService struct {
+	exchange string
+	conn     *amqp.Connection
+	ch       *amqp.Channel
+}
 
-func StartProducer() error {
+func NewRabbitMQService(exchange string) (MessagingService, error) {
 	var err error
 
 	url := os.Getenv("RABBITMQ_URL")
 	if url == "" {
-		return fmt.Errorf("RABBITMQ_URL not set")
+		return nil, fmt.Errorf("RABBITMQ_URL not set")
 	}
 
-	conn, err = amqp.Dial(url)
+	conn, err := amqp.Dial(url)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	ch, err = conn.Channel()
+	ch, err := conn.Channel()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = ch.ExchangeDeclare(
-		"megebase.topic",
+		exchange,
 		"topic",
 		true,
 		false,
@@ -42,43 +42,17 @@ func StartProducer() error {
 		nil,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &rabbitMQService{
+		exchange: exchange,
+		conn:     conn,
+		ch:       ch,
+	}, nil
 }
 
-func CloseProducer() error {
-	if ch != nil {
-		if err := ch.Close(); err != nil {
-			return err
-		}
-	}
-	if conn != nil {
-		if err := conn.Close(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-type MessageEvent struct {
-	Service string                 `json:"service"`
-	Entity  string                 `json:"entity"`
-	Action  string                 `json:"action"`
-	Channel string                 `json:"channel,omitempty"`
-	To      string                 `json:"to,omitempty"`
-	Data    map[string]interface{} `json:"data"`
-}
-
-func (m *MessageEvent) RoutingKey() string {
-	if m.Channel != "" {
-		return fmt.Sprintf("%s.%s.%s.%s", m.Service, m.Entity, m.Action, m.Channel)
-	}
-	return fmt.Sprintf("%s.%s.%s", m.Service, m.Entity, m.Action)
-}
-
-func PublishMessage(msg MessageEvent) error {
+func (s *rabbitMQService) PublishMessage(msg MessageEvent) error {
 	body, err := json.Marshal(msg)
 	if err != nil {
 		return err
@@ -86,8 +60,8 @@ func PublishMessage(msg MessageEvent) error {
 
 	routingKey := msg.RoutingKey()
 
-	return ch.Publish(
-		"megebase.topic",
+	return s.ch.Publish(
+		s.exchange,
 		routingKey,
 		true,
 		false,
@@ -96,4 +70,16 @@ func PublishMessage(msg MessageEvent) error {
 			Body:        body,
 		},
 	)
+}
+
+func (r *rabbitMQService) Close() error {
+	if err := r.ch.Close(); err != nil {
+		return err
+	}
+
+	if err := r.conn.Close(); err != nil {
+		return err
+	}
+	
+	return nil
 }

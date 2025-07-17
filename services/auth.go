@@ -4,14 +4,36 @@ import (
 	"time"
 
 	"github.com/MegeKaplan/megebase-identity-service/dto"
+	"github.com/MegeKaplan/megebase-identity-service/messaging"
 	"github.com/MegeKaplan/megebase-identity-service/models"
 	"github.com/MegeKaplan/megebase-identity-service/repositories"
 	"github.com/MegeKaplan/megebase-identity-service/utils"
 	"github.com/MegeKaplan/megebase-identity-service/utils/response"
 )
 
-func RegisterUser(repo repositories.UserRepository, body dto.RegisterRequest) (models.User, *response.AppError) {
-	_, err := repo.FindByEmail(body.Email)
+type AuthService interface {
+	RegisterUser(body dto.RegisterRequest) (models.User, *response.AppError)
+	LoginUser(body dto.LoginRequest) (models.User, *response.AppError)
+	SendOTP(body dto.SendOTPRequest) *response.AppError
+	VerifyOTP(email string, otp string) (bool, *response.AppError)
+}
+
+type authService struct {
+	authRepo         repositories.UserRepository
+	otpRepo          repositories.OTPRepository
+	messagingService messaging.MessagingService
+}
+
+func NewAuthService(authRepo repositories.UserRepository, otpRepo repositories.OTPRepository, messagingService messaging.MessagingService) AuthService {
+	return &authService{
+		authRepo:         authRepo,
+		otpRepo:          otpRepo,
+		messagingService: messagingService,
+	}
+}
+
+func (s *authService) RegisterUser(body dto.RegisterRequest) (models.User, *response.AppError) {
+	_, err := s.authRepo.FindByEmail(body.Email)
 	if err == nil {
 		return models.User{}, response.ErrEmailAlreadyExists
 	}
@@ -26,15 +48,15 @@ func RegisterUser(repo repositories.UserRepository, body dto.RegisterRequest) (m
 		Password: hashedPassword,
 	}
 
-	if err := repo.Create(&user); err != nil {
+	if err := s.authRepo.Create(&user); err != nil {
 		return models.User{}, response.ErrDBOperation
 	}
 
 	return user, nil
 }
 
-func LoginUser(repo repositories.UserRepository, body dto.LoginRequest) (models.User, *response.AppError) {
-	existingUser, err := repo.FindByEmail(body.Email)
+func (s *authService) LoginUser(body dto.LoginRequest) (models.User, *response.AppError) {
+	existingUser, err := s.authRepo.FindByEmail(body.Email)
 	if err != nil {
 		return models.User{}, response.ErrEmailNotFound
 	}
@@ -46,8 +68,8 @@ func LoginUser(repo repositories.UserRepository, body dto.LoginRequest) (models.
 	return existingUser, nil
 }
 
-func SendOTP(repo repositories.OTPRepository, body dto.SendOTPRequest) *response.AppError {
-	entry, exists := repo.FindByEmail(body.Email)
+func (s *authService) SendOTP(body dto.SendOTPRequest) *response.AppError {
+	entry, exists := s.otpRepo.FindByEmail(body.Email)
 	if exists && time.Now().Before(entry.ExpiresAt) {
 		return response.ErrOTPSentRecently
 	}
@@ -63,20 +85,20 @@ func SendOTP(repo repositories.OTPRepository, body dto.SendOTPRequest) *response
 		ExpiresAt: time.Now().Add(5 * time.Minute),
 	}
 
-	err = repo.SaveOTP(otpEntry)
+	err = s.otpRepo.SaveOTP(otpEntry)
 	if err != nil {
 		return response.ErrDBOperation
 	}
 
-	if err := utils.SendOTP("email", body.Email, otp); err != nil {
+	if err := utils.SendOTP(s.messagingService, "email", body.Email, otp); err != nil {
 		return response.ErrOTPSendFailed
 	}
 
 	return nil
 }
 
-func VerifyOTP(repo repositories.OTPRepository, email string, otp string) (bool, *response.AppError) {
-	entry, exists := repo.FindByEmail(email)
+func (s *authService) VerifyOTP(email string, otp string) (bool, *response.AppError) {
+	entry, exists := s.otpRepo.FindByEmail(email)
 	if !exists {
 		return false, response.ErrOTPNotFound
 	}
@@ -89,7 +111,7 @@ func VerifyOTP(repo repositories.OTPRepository, email string, otp string) (bool,
 		return false, response.ErrInvalidOTP
 	}
 
-	isValid := repo.VerifyOTP(email, otp)
+	isValid := s.otpRepo.VerifyOTP(email, otp)
 
 	return isValid, nil
 }

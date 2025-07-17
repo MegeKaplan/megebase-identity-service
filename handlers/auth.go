@@ -2,14 +2,21 @@ package handlers
 
 import (
 	"github.com/MegeKaplan/megebase-identity-service/dto"
-	"github.com/MegeKaplan/megebase-identity-service/repositories"
 	"github.com/MegeKaplan/megebase-identity-service/services"
 	"github.com/MegeKaplan/megebase-identity-service/utils"
 	"github.com/MegeKaplan/megebase-identity-service/utils/response"
 	"github.com/gin-gonic/gin"
 )
 
-func Register(userRepo repositories.UserRepository, otpRepo repositories.OTPRepository) gin.HandlerFunc {
+type authHandler struct {
+	authService services.AuthService
+}
+
+func NewAuthHandler(authService services.AuthService) *authHandler {
+	return &authHandler{authService: authService}
+}
+
+func (h *authHandler) Register() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body dto.RegisterRequest
 
@@ -18,7 +25,7 @@ func Register(userRepo repositories.UserRepository, otpRepo repositories.OTPRepo
 			return
 		}
 
-		isValid, err := services.VerifyOTP(otpRepo, body.Email, body.OTP)
+		isValid, err := h.authService.VerifyOTP(body.Email, body.OTP)
 		if err != nil {
 			utils.JSONError(c, err, err.Details)
 			return
@@ -29,7 +36,7 @@ func Register(userRepo repositories.UserRepository, otpRepo repositories.OTPRepo
 			return
 		}
 
-		createdUser, err := services.RegisterUser(userRepo, body)
+		createdUser, err := h.authService.RegisterUser(body)
 		if err != nil {
 			utils.JSONError(c, err, err.Details)
 			return
@@ -48,7 +55,7 @@ func Register(userRepo repositories.UserRepository, otpRepo repositories.OTPRepo
 	}
 }
 
-func Login(repo repositories.UserRepository) gin.HandlerFunc {
+func (h *authHandler) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body dto.LoginRequest
 
@@ -57,7 +64,7 @@ func Login(repo repositories.UserRepository) gin.HandlerFunc {
 			return
 		}
 
-		existingUser, err := services.LoginUser(repo, body)
+		existingUser, err := h.authService.LoginUser(body)
 		if err != nil {
 			utils.JSONError(c, err, err.Details)
 			return
@@ -76,7 +83,7 @@ func Login(repo repositories.UserRepository) gin.HandlerFunc {
 	}
 }
 
-func SendOTP(repo repositories.OTPRepository) gin.HandlerFunc {
+func (h *authHandler) SendOTP() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body dto.SendOTPRequest
 
@@ -85,7 +92,7 @@ func SendOTP(repo repositories.OTPRepository) gin.HandlerFunc {
 			return
 		}
 
-		if err := services.SendOTP(repo, body); err != nil {
+		if err := h.authService.SendOTP(body); err != nil {
 			utils.JSONError(c, err, err.Details)
 			return
 		}
@@ -94,7 +101,7 @@ func SendOTP(repo repositories.OTPRepository) gin.HandlerFunc {
 	}
 }
 
-func VerifyOTP(repo repositories.OTPRepository) gin.HandlerFunc {
+func (h *authHandler) VerifyOTP() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body dto.VerifyOTPRequest
 
@@ -103,7 +110,7 @@ func VerifyOTP(repo repositories.OTPRepository) gin.HandlerFunc {
 			return
 		}
 
-		isValid, err := services.VerifyOTP(repo, body.Email, body.OTP)
+		isValid, err := h.authService.VerifyOTP(body.Email, body.OTP)
 		if err != nil {
 			utils.JSONError(c, err, err.Details)
 			return

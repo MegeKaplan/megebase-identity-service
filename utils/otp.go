@@ -19,7 +19,7 @@ func GenerateOTP() (string, error) {
 	return otp, nil
 }
 
-func SendOTP(channel string, to string, otp string) error {
+func SendOTP(messagingService messaging.MessagingService, channel string, to string, otp string) error {
 	msg := messaging.MessageEvent{
 		Service: "identity",
 		Entity:  "otp",
@@ -31,7 +31,7 @@ func SendOTP(channel string, to string, otp string) error {
 		},
 	}
 
-	if err := messaging.PublishMessage(msg); err != nil {
+	if err := messagingService.PublishMessage(msg); err != nil {
 		return err
 	}
 
