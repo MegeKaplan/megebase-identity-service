@@ -1,7 +1,10 @@
 package repositories
 
 import (
+	"fmt"
+
 	"github.com/MegeKaplan/megebase-identity-service/models"
+	"github.com/MegeKaplan/megebase-identity-service/utils"
 	"gorm.io/gorm"
 )
 
@@ -9,6 +12,7 @@ type UserRepository interface {
 	FindByEmail(email string) (models.User, error)
 	Create(user *models.User) error
 	FindByID(id string) (models.User, error)
+	SearchUsers(params utils.QueryParams) ([]models.User, error)
 }
 
 // GORM
@@ -34,6 +38,31 @@ func (r *userGormRepository) FindByID(id string) (models.User, error) {
 	var user models.User
 	err := r.db.First(&user, "id = ?", id).Error
 	return user, err
+}
+
+func (r *userGormRepository) SearchUsers(params utils.QueryParams) ([]models.User, error) {
+	var users []models.User
+	query := r.db.Model(&models.User{})
+
+	for key, value := range params.Filters {
+		if key == "limit" || key == "offset" || key == "sort" {
+			continue
+		}
+		query = query.Where(fmt.Sprintf("%s = ?", key), value)
+	}
+
+	if params.Sort != "" {
+		query = query.Order(params.Sort)
+	}
+
+	query = query.Limit(params.Limit).Offset(params.Offset)
+
+	err := query.Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 // MOCK

@@ -143,4 +143,10 @@ var (
 		Message:    "User not found",
 		HTTPStatus: http.StatusNotFound,
 	}
+
+	ErrUsersNotFound = &AppError{
+		Code:       "USERS_NOT_FOUND",
+		Message:    "No users found matching the criteria",
+		HTTPStatus: http.StatusNotFound,
+	}
 )

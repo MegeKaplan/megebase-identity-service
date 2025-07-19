@@ -44,3 +44,21 @@ func (h *userHandler) GetUserByID() gin.HandlerFunc {
 		utils.JSONSuccess(c, response.UserFetched, user)
 	}
 }
+
+func (h *userHandler) GetUsers() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		params := utils.ParseQueryParams(c)
+
+		users, err := h.userService.SearchUsers(params)
+		if err != nil {
+			utils.JSONError(c, err, err.Details)
+			return
+		}
+		if len(users) == 0 {
+			utils.JSONError(c, response.ErrUsersNotFound, "")
+			return
+		}
+		
+		utils.JSONSuccess(c, response.UsersFetched, users)
+	}
+}

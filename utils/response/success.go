@@ -46,4 +46,10 @@ var (
 		Message:    "User fetched successfully",
 		HTTPStatus: http.StatusOK,
 	}
+
+	UsersFetched = &AppSuccess{
+		Code:       "USERS_FETCHED",
+		Message:    "Users fetched successfully",
+		HTTPStatus: http.StatusOK,
+	}
 )

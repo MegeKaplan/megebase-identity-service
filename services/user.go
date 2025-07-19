@@ -3,11 +3,13 @@ package services
 import (
 	"github.com/MegeKaplan/megebase-identity-service/models"
 	"github.com/MegeKaplan/megebase-identity-service/repositories"
+	"github.com/MegeKaplan/megebase-identity-service/utils"
 	"github.com/MegeKaplan/megebase-identity-service/utils/response"
 )
 
 type UserService interface {
 	GetUserByID(id string) (models.User, *response.AppError)
+	SearchUsers(params utils.QueryParams) ([]models.User, *response.AppError)
 }
 
 type userService struct {
@@ -24,4 +26,13 @@ func (s *userService) GetUserByID(id string) (models.User, *response.AppError) {
 		return models.User{}, response.ErrUserNotFound
 	}
 	return user, nil
+}
+
+
+func (s *userService) SearchUsers(params utils.QueryParams) ([]models.User, *response.AppError) {
+	users, err := s.userRepo.SearchUsers(params)
+	if err != nil {
+		return nil, response.ErrUsersNotFound
+	}
+	return users, nil
 }

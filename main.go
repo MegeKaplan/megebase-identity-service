@@ -58,6 +58,7 @@ func main() {
 	userRoutes := r.Group("/users")
 	userRoutes.Use(middleware.AuthMiddleware())
 	{
+		userRoutes.GET("/", userHandler.GetUsers())
 		userRoutes.GET("/me", userHandler.GetMe())
 		userRoutes.GET("/:id", userHandler.GetUserByID())
 	}
