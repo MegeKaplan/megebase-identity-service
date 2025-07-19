@@ -135,3 +135,12 @@ var (
 		HTTPStatus: http.StatusNotFound,
 	}
 )
+
+// User Errors
+var (
+	ErrUserNotFound = &AppError{
+		Code:       "USER_NOT_FOUND",
+		Message:    "User not found",
+		HTTPStatus: http.StatusNotFound,
+	}
+)

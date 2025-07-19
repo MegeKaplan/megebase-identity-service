@@ -8,6 +8,7 @@ import (
 type UserRepository interface {
 	FindByEmail(email string) (models.User, error)
 	Create(user *models.User) error
+	FindByID(id string) (models.User, error)
 }
 
 // GORM
@@ -29,23 +30,29 @@ func (r *userGormRepository) Create(user *models.User) error {
 	return r.db.Create(user).Error
 }
 
+func (r *userGormRepository) FindByID(id string) (models.User, error) {
+	var user models.User
+	err := r.db.First(&user, "id = ?", id).Error
+	return user, err
+}
+
 // MOCK
-type userMockRepository struct {
-	users map[string]models.User
-}
+// type userMockRepository struct {
+// 	users map[string]models.User
+// }
 
-func NewUserMockRepository() UserRepository {
-	return &userMockRepository{users: make(map[string]models.User)}
-}
+// func NewUserMockRepository() UserRepository {
+// 	return &userMockRepository{users: make(map[string]models.User)}
+// }
 
-func (r *userMockRepository) FindByEmail(email string) (models.User, error) {
-	if user, exists := r.users[email]; exists {
-		return user, nil
-	}
-	return models.User{}, gorm.ErrRecordNotFound
-}
+// func (r *userMockRepository) FindByEmail(email string) (models.User, error) {
+// 	if user, exists := r.users[email]; exists {
+// 		return user, nil
+// 	}
+// 	return models.User{}, gorm.ErrRecordNotFound
+// }
 
-func (r *userMockRepository) Create(user *models.User) error {
-	r.users[user.Email] = *user
-	return nil
-}
+// func (r *userMockRepository) Create(user *models.User) error {
+// 	r.users[user.Email] = *user
+// 	return nil
+// }

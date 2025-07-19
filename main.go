@@ -6,6 +6,7 @@ import (
 	"github.com/MegeKaplan/megebase-identity-service/database"
 	"github.com/MegeKaplan/megebase-identity-service/handlers"
 	"github.com/MegeKaplan/megebase-identity-service/messaging"
+	"github.com/MegeKaplan/megebase-identity-service/middleware"
 	"github.com/MegeKaplan/megebase-identity-service/repositories"
 	"github.com/MegeKaplan/megebase-identity-service/services"
 	"github.com/gin-gonic/gin"
@@ -37,8 +38,10 @@ func main() {
 	otpRepo := repositories.NewInMemoryOTPRepository()
 
 	authService := services.NewAuthService(userRepo, otpRepo, rabbitMQService)
+	userService := services.NewUserService(userRepo)
 
 	authHandler := handlers.NewAuthHandler(authService)
+	userHandler := handlers.NewUserHandler(userService)
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "Hello world!")
@@ -50,6 +53,13 @@ func main() {
 		authRoutes.POST("/register/send-otp", authHandler.SendOTP())
 		authRoutes.POST("/register/verify-otp", authHandler.VerifyOTP())
 		authRoutes.POST("/login", authHandler.Login())
+	}
+
+	userRoutes := r.Group("/users")
+	userRoutes.Use(middleware.AuthMiddleware())
+	{
+		userRoutes.GET("/me", userHandler.GetMe())
+		userRoutes.GET("/:id", userHandler.GetUserByID())
 	}
 
 	r.Run(":8080")
