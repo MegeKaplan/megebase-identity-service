@@ -149,4 +149,16 @@ var (
 		Message:    "No users found matching the criteria",
 		HTTPStatus: http.StatusNotFound,
 	}
+
+	ErrInvalidParams = &AppError{
+		Code:       "INVALID_PARAMS",
+		Message:    "Invalid query parameters",
+		HTTPStatus: http.StatusBadRequest,
+	}
+
+	ErrUserUpdateFailed = &AppError{
+		Code:       "USER_UPDATE_FAILED",
+		Message:    "Failed to update user",
+		HTTPStatus: http.StatusInternalServerError,
+	}
 )

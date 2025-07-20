@@ -13,6 +13,7 @@ type UserRepository interface {
 	Create(user *models.User) error
 	FindByID(id string) (models.User, error)
 	SearchUsers(params utils.QueryParams) ([]models.User, error)
+	Update(user models.User) error
 }
 
 // GORM
@@ -63,6 +64,13 @@ func (r *userGormRepository) SearchUsers(params utils.QueryParams) ([]models.Use
 	}
 
 	return users, nil
+}
+
+func (r *userGormRepository) Update(user models.User) error {
+	if err := r.db.Save(&user).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 // MOCK

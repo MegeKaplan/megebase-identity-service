@@ -61,6 +61,7 @@ func main() {
 		userRoutes.GET("/", userHandler.GetUsers())
 		userRoutes.GET("/me", userHandler.GetMe())
 		userRoutes.GET("/:id", userHandler.GetUserByID())
+		userRoutes.PUT("/:id", userHandler.UpdateUser())
 	}
 
 	r.Run(":8080")

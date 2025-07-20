@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/MegeKaplan/megebase-identity-service/dto"
 	"github.com/MegeKaplan/megebase-identity-service/services"
 	"github.com/MegeKaplan/megebase-identity-service/utils"
 	"github.com/MegeKaplan/megebase-identity-service/utils/response"
@@ -58,7 +59,26 @@ func (h *userHandler) GetUsers() gin.HandlerFunc {
 			utils.JSONError(c, response.ErrUsersNotFound, "")
 			return
 		}
-		
+
 		utils.JSONSuccess(c, response.UsersFetched, users)
+	}
+}
+
+func (h *userHandler) UpdateUser() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		var body dto.UpdateUserRequest
+		if err := c.ShouldBindJSON(&body); err != nil {
+			utils.JSONError(c, response.ErrInvalidJSON, err.Error())
+			return
+		}
+
+		updatedUser, err := h.userService.UpdateUser(id, body)
+		if err != nil {
+			utils.JSONError(c, err, err.Details)
+			return
+		}
+
+		utils.JSONSuccess(c, response.UserUpdated, updatedUser)
 	}
 }
