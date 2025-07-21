@@ -14,6 +14,8 @@ type UserRepository interface {
 	FindByID(id string) (models.User, error)
 	SearchUsers(params utils.QueryParams) ([]models.User, error)
 	Update(user models.User) error
+	SoftDeleteByID(id string) error
+	HardDeleteByID(id string) error
 }
 
 // GORM
@@ -71,6 +73,14 @@ func (r *userGormRepository) Update(user models.User) error {
 		return err
 	}
 	return nil
+}
+
+func (r *userGormRepository) SoftDeleteByID(id string) error {
+	return r.db.Delete(&models.User{}, "id = ?", id).Error
+}
+
+func (r *userGormRepository) HardDeleteByID(id string) error {
+	return r.db.Unscoped().Delete(&models.User{}, "id = ?", id).Error
 }
 
 // MOCK

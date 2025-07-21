@@ -58,4 +58,10 @@ var (
 		Message:    "User updated successfully",
 		HTTPStatus: http.StatusOK,
 	}
+
+	UserDeleted = &AppSuccess{
+		Code:       "USER_DELETED",
+		Message:    "User deleted successfully",
+		HTTPStatus: http.StatusOK,
+	}
 )

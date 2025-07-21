@@ -161,4 +161,10 @@ var (
 		Message:    "Failed to update user",
 		HTTPStatus: http.StatusInternalServerError,
 	}
+
+	ErrUserDeleteFailed = &AppError{
+		Code:       "USER_DELETE_FAILED",
+		Message:    "Failed to delete user",
+		HTTPStatus: http.StatusInternalServerError,
+	}
 )

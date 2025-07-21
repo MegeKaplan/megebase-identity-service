@@ -12,6 +12,7 @@ type UserService interface {
 	GetUserByID(id string) (models.User, *response.AppError)
 	SearchUsers(params utils.QueryParams) ([]models.User, *response.AppError)
 	UpdateUser(id string, body dto.UpdateUserRequest) (models.User, *response.AppError)
+	DeleteUser(id string, hardDelete bool) *response.AppError
 }
 
 type userService struct {
@@ -63,4 +64,17 @@ func (s *userService) UpdateUser(id string, body dto.UpdateUserRequest) (models.
 	}
 
 	return user, nil
+}
+
+func (s *userService) DeleteUser(id string, hardDelete bool) *response.AppError {
+	if hardDelete {
+		if err := s.userRepo.HardDeleteByID(id); err != nil {
+			return response.ErrUserDeleteFailed
+		}
+	} else {
+		if err := s.userRepo.SoftDeleteByID(id); err != nil {
+			return response.ErrUserDeleteFailed
+		}
+	}
+	return nil
 }

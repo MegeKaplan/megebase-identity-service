@@ -82,3 +82,18 @@ func (h *userHandler) UpdateUser() gin.HandlerFunc {
 		utils.JSONSuccess(c, response.UserUpdated, updatedUser)
 	}
 }
+
+func (h *userHandler) DeleteUser() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		hardDelete := c.Query("hard") == "true"
+
+		err := h.userService.DeleteUser(id, hardDelete)
+		if err != nil {
+			utils.JSONError(c, err, err.Details)
+			return
+		}
+
+		utils.JSONSuccess(c, response.UserDeleted, nil)
+	}
+}
