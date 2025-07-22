@@ -1,10 +1,14 @@
 package repositories
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/MegeKaplan/megebase-identity-service/models"
+	"github.com/redis/go-redis/v9"
 )
 
 type OTPRepository interface {
@@ -61,5 +65,57 @@ func (r *inMemoryOTPRepository) VerifyOTP(email, otp string) (bool) {
 	r.mu.Lock()
 	delete(r.store, email)
 	r.mu.Unlock()
+	return true
+}
+
+// Redis
+type redisOTPRepository struct {
+	client     *redis.Client
+	expiration time.Duration
+}
+
+func NewRedisOTPRepository(client *redis.Client, expiration time.Duration) OTPRepository {
+	return &redisOTPRepository{
+		client:     client,
+		expiration: expiration,
+	}
+}
+
+func (r *redisOTPRepository) SaveOTP(entry models.OTPEntry) error {
+	ctx := context.Background()
+
+	data, err := json.Marshal(entry)
+	if err != nil {
+		return err
+	}
+	key := fmt.Sprintf("otp:%s", entry.Email)
+	return r.client.Set(ctx, key, data, r.expiration).Err()
+}
+
+func (r *redisOTPRepository) FindByEmail(email string) (models.OTPEntry, bool) {
+	ctx := context.Background()
+	
+	key := fmt.Sprintf("otp:%s", email)
+	val, err := r.client.Get(ctx, key).Result()
+	if err == redis.Nil || err != nil {
+		return models.OTPEntry{}, false
+	}
+
+	var entry models.OTPEntry
+	if err := json.Unmarshal([]byte(val), &entry); err != nil {
+		return models.OTPEntry{}, false
+	}
+	return entry, true
+}
+
+func (r *redisOTPRepository) VerifyOTP(email, otp string) bool {
+	entry, found := r.FindByEmail(email)
+	if !found || entry.OTP != otp || time.Now().After(entry.ExpiresAt) {
+		return false
+	}
+
+	ctx := context.Background()
+	key := fmt.Sprintf("otp:%s", email)
+	r.client.Del(ctx, key)
 	return true
 }

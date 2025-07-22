@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/MegeKaplan/megebase-identity-service/database"
 	"github.com/MegeKaplan/megebase-identity-service/handlers"
@@ -34,8 +35,14 @@ func main() {
 	}
 	defer rabbitMQService.Close()
 
+	redisClient, err := database.ConnectRedis()
+	if err != nil {
+		panic(err.Error())
+	}
+	
 	userRepo := repositories.NewUserGormRepository(db)
-	otpRepo := repositories.NewInMemoryOTPRepository()
+	// otpRepo := repositories.NewInMemoryOTPRepository()
+	otpRepo := repositories.NewRedisOTPRepository(redisClient, 5*time.Minute)
 
 	authService := services.NewAuthService(userRepo, otpRepo, rabbitMQService)
 	userService := services.NewUserService(userRepo)
