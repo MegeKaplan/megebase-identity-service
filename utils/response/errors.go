@@ -168,3 +168,36 @@ var (
 		HTTPStatus: http.StatusInternalServerError,
 	}
 )
+
+// Refresh Token Errors
+var (
+	ErrRefreshTokenNotFound = &AppError{
+		Code:       "REFRESH_TOKEN_NOT_FOUND",
+		Message:    "Refresh token not found",
+		HTTPStatus: http.StatusNotFound,
+	}
+
+	ErrInvalidRefreshToken = &AppError{
+		Code:       "INVALID_REFRESH_TOKEN",
+		Message:    "Invalid refresh token",
+		HTTPStatus: http.StatusUnauthorized,
+	}
+
+	ErrExpiredRefreshToken = &AppError{
+		Code:       "EXPIRED_REFRESH_TOKEN",
+		Message:    "Refresh token has expired",
+		HTTPStatus: http.StatusUnauthorized,
+	}
+
+	ErrInvalidUserID = &AppError{
+		Code:       "INVALID_USER_ID",
+		Message:    "Invalid user ID format",
+		HTTPStatus: http.StatusBadRequest,
+	}
+
+	ErrMissingRefreshToken = &AppError{
+		Code:       "MISSING_REFRESH_TOKEN",
+		Message:    "Refresh token is missing",
+		HTTPStatus: http.StatusBadRequest,
+	}
+)

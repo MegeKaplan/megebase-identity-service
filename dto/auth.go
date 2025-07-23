@@ -9,8 +9,8 @@ type RegisterRequest struct {
 }
 
 type RegisterResponse struct {
-	Token string      `json:"token"`
-	User  models.User `json:"user"`
+	AccessToken string      `json:"access_token"`
+	User        models.User `json:"user"`
 }
 
 type LoginRequest struct {
@@ -19,6 +19,10 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Token string      `json:"token"`
-	User  models.User `json:"user"`
+	AccessToken string      `json:"access_token"`
+	User        models.User `json:"user"`
+}
+
+type RefreshTokensResponse struct {
+	AccessToken string `json:"access_token"`
 }

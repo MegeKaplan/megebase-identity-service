@@ -65,3 +65,12 @@ var (
 		HTTPStatus: http.StatusOK,
 	}
 )
+
+// Refresh Token
+var (
+	TokensRefreshed = &AppSuccess{
+		Code:       "TOKENS_REFRESHED",
+		Message:    "Tokens refreshed successfully",
+		HTTPStatus: http.StatusOK,
+	}
+)

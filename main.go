@@ -10,6 +10,7 @@ import (
 	"github.com/MegeKaplan/megebase-identity-service/middleware"
 	"github.com/MegeKaplan/megebase-identity-service/repositories"
 	"github.com/MegeKaplan/megebase-identity-service/services"
+	"github.com/MegeKaplan/megebase-identity-service/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -39,12 +40,13 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	
+
 	userRepo := repositories.NewUserGormRepository(db)
 	// otpRepo := repositories.NewInMemoryOTPRepository()
 	otpRepo := repositories.NewRedisOTPRepository(redisClient, 5*time.Minute)
+	refreshTokenRepo := repositories.NewRefreshTokenRepository(redisClient, utils.RefreshTokenTTL())
 
-	authService := services.NewAuthService(userRepo, otpRepo, rabbitMQService)
+	authService := services.NewAuthService(userRepo, otpRepo, rabbitMQService, refreshTokenRepo)
 	userService := services.NewUserService(userRepo)
 
 	authHandler := handlers.NewAuthHandler(authService)
@@ -60,6 +62,7 @@ func main() {
 		authRoutes.POST("/register/send-otp", authHandler.SendOTP())
 		authRoutes.POST("/register/verify-otp", authHandler.VerifyOTP())
 		authRoutes.POST("/login", authHandler.Login())
+		authRoutes.POST("/refresh", authHandler.RefreshTokens())
 	}
 
 	userRoutes := r.Group("/users")

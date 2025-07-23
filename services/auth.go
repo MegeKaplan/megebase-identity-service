@@ -9,6 +9,7 @@ import (
 	"github.com/MegeKaplan/megebase-identity-service/repositories"
 	"github.com/MegeKaplan/megebase-identity-service/utils"
 	"github.com/MegeKaplan/megebase-identity-service/utils/response"
+	"github.com/google/uuid"
 )
 
 type AuthService interface {
@@ -16,19 +17,23 @@ type AuthService interface {
 	LoginUser(body dto.LoginRequest) (models.User, *response.AppError)
 	SendOTP(body dto.SendOTPRequest) *response.AppError
 	VerifyOTP(email string, otp string) (bool, *response.AppError)
+	GenerateTokens(user models.User) (string, string, *response.AppError)
+	RefreshTokens(refreshToken string) (string, string, *response.AppError)
 }
 
 type authService struct {
 	authRepo         repositories.UserRepository
 	otpRepo          repositories.OTPRepository
 	messagingService messaging.MessagingService
+	refreshTokenRepo repositories.RefreshTokenRepository
 }
 
-func NewAuthService(authRepo repositories.UserRepository, otpRepo repositories.OTPRepository, messagingService messaging.MessagingService) AuthService {
+func NewAuthService(authRepo repositories.UserRepository, otpRepo repositories.OTPRepository, messagingService messaging.MessagingService, refreshTokenRepo repositories.RefreshTokenRepository) AuthService {
 	return &authService{
 		authRepo:         authRepo,
 		otpRepo:          otpRepo,
 		messagingService: messagingService,
+		refreshTokenRepo: refreshTokenRepo,
 	}
 }
 
@@ -114,4 +119,69 @@ func (s *authService) VerifyOTP(email string, otp string) (bool, *response.AppEr
 	isValid := s.otpRepo.VerifyOTP(email, otp)
 
 	return isValid, nil
+}
+
+func (s *authService) GenerateTokens(user models.User) (string, string, *response.AppError) {
+	accessToken, err := utils.GenerateJWT(user.ID, user.Email)
+	if err != nil {
+		return "", "", response.ErrTokenGenerationFailed
+	}
+
+	refreshToken := utils.GenerateRefreshToken()
+
+	refreshEntry := models.RefreshToken{
+		Token:     refreshToken,
+		UserID:    user.ID.String(),
+		ExpiresAt: time.Now().Add(utils.RefreshTokenTTL()),
+	}
+
+	if err := s.refreshTokenRepo.Save(refreshEntry); err != nil {
+		return "", "", response.ErrDBOperation
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+func (s *authService) RefreshTokens(refreshToken string) (string, string, *response.AppError) {
+	entry, found := s.refreshTokenRepo.Find(refreshToken)
+	if !found {
+		return "", "", response.ErrInvalidRefreshToken
+	}
+
+	if time.Now().After(entry.ExpiresAt) {
+		return "", "", response.ErrExpiredRefreshToken
+	}
+
+	if err := s.refreshTokenRepo.Delete(refreshToken); err != nil {
+		return "", "", response.ErrDBOperation
+	}
+
+	userID, err := uuid.Parse(entry.UserID)
+	if err != nil {
+		return "", "", response.ErrInvalidUserID
+	}
+
+	user, err := s.authRepo.FindByID(userID.String())
+	if err != nil {
+		return "", "", err.(*response.AppError)
+	}
+
+	accessToken, err := utils.GenerateJWT(user.ID, user.Email)
+	if err.(*response.AppError) != nil {
+		return "", "", response.ErrTokenGenerationFailed
+	}
+
+	newRefreshToken := utils.GenerateRefreshToken()
+
+	refreshEntry := models.RefreshToken{
+		Token:     newRefreshToken,
+		UserID:    user.ID.String(),
+		ExpiresAt: time.Now().Add(utils.RefreshTokenTTL()),
+	}
+
+	if err := s.refreshTokenRepo.Save(refreshEntry); err != nil {
+		return "", "", response.ErrDBOperation
+	}
+
+	return accessToken, newRefreshToken, nil
 }

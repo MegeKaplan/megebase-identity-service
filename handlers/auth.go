@@ -36,21 +36,31 @@ func (h *authHandler) Register() gin.HandlerFunc {
 			return
 		}
 
-		createdUser, err := h.authService.RegisterUser(body)
+		user, err := h.authService.RegisterUser(body)
 		if err != nil {
 			utils.JSONError(c, err, err.Details)
 			return
 		}
 
-		token, err := utils.GenerateJWT(createdUser.ID, createdUser.Email)
+		accessToken, refreshToken, err := h.authService.GenerateTokens(user)
 		if err != nil {
 			utils.JSONError(c, err, err.Details)
 			return
 		}
+
+		c.SetCookie(
+			"refresh_token",
+			refreshToken,
+			7*24*60*60,
+			"/",
+			"",
+			true,
+			true,
+		)
 
 		utils.JSONSuccess(c, response.UserRegistered, dto.RegisterResponse{
-			Token: token,
-			User:  createdUser,
+			AccessToken: accessToken,
+			User:        user,
 		})
 	}
 }
@@ -64,21 +74,31 @@ func (h *authHandler) Login() gin.HandlerFunc {
 			return
 		}
 
-		existingUser, err := h.authService.LoginUser(body)
+		user, err := h.authService.LoginUser(body)
 		if err != nil {
 			utils.JSONError(c, err, err.Details)
 			return
 		}
 
-		token, err := utils.GenerateJWT(existingUser.ID, existingUser.Email)
+		accessToken, refreshToken, err := h.authService.GenerateTokens(user)
 		if err != nil {
 			utils.JSONError(c, err, err.Details)
 			return
 		}
+
+		c.SetCookie(
+			"refresh_token",
+			refreshToken,
+			7*24*60*60,
+			"/",
+			"",
+			true,
+			true,
+		)
 
 		utils.JSONSuccess(c, response.UserLoggedIn, dto.LoginResponse{
-			Token: token,
-			User:  existingUser,
+			AccessToken: accessToken,
+			User:        user,
 		})
 	}
 }
@@ -122,5 +142,35 @@ func (h *authHandler) VerifyOTP() gin.HandlerFunc {
 		}
 
 		utils.JSONSuccess(c, response.OTPVerified, nil)
+	}
+}
+
+func (h *authHandler) RefreshTokens() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		refreshToken, err := c.Cookie("refresh_token")
+		if err != nil {
+			utils.JSONError(c, response.ErrMissingRefreshToken, "")
+			return
+		}
+
+		accessToken, newRefreshToken, err := h.authService.RefreshTokens(refreshToken)
+		if err.(*response.AppError) != nil {
+			utils.JSONError(c, err.(*response.AppError), err.(*response.AppError).Details)
+			return
+		}
+
+		c.SetCookie(
+			"refresh_token",
+			newRefreshToken,
+			7*24*60*60,
+			"/",
+			"",
+			true,
+			true,
+		)
+
+		utils.JSONSuccess(c, response.TokensRefreshed, dto.RefreshTokensResponse{
+			AccessToken: accessToken,
+		})
 	}
 }
