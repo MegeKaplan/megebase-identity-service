@@ -18,13 +18,13 @@ func NewUserHandler(userService services.UserService) *userHandler {
 
 func (h *userHandler) GetMe() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userID, exists := c.Get("userID")
-		if !exists {
-			utils.JSONError(c, response.ErrUnauthorized, "asd")
+		userID := c.Request.Header.Get("X-User-Id")
+		if userID == "" {
+			utils.JSONError(c, response.ErrUnauthorized, "")
 			return
 		}
 
-		user, err := h.userService.GetUserByID(userID.(string))
+		user, err := h.userService.GetUserByID(userID)
 		if err != nil {
 			utils.JSONError(c, err, err.Details)
 			return

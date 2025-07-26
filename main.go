@@ -7,7 +7,6 @@ import (
 	"github.com/MegeKaplan/megebase-identity-service/database"
 	"github.com/MegeKaplan/megebase-identity-service/handlers"
 	"github.com/MegeKaplan/megebase-identity-service/messaging"
-	"github.com/MegeKaplan/megebase-identity-service/middleware"
 	"github.com/MegeKaplan/megebase-identity-service/repositories"
 	"github.com/MegeKaplan/megebase-identity-service/services"
 	"github.com/MegeKaplan/megebase-identity-service/utils"
@@ -66,7 +65,7 @@ func main() {
 	}
 
 	userRoutes := r.Group("/users")
-	userRoutes.Use(middleware.AuthMiddleware())
+	// userRoutes.Use(middleware.AuthMiddleware())
 	{
 		userRoutes.GET("/", userHandler.GetUsers())
 		userRoutes.GET("/me", userHandler.GetMe())
