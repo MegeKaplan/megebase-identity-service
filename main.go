@@ -24,7 +24,7 @@ func init() {
 func main() {
 	r := gin.Default()
 
-	db, err := database.Connect()
+	db, err := database.ConnectPostgres()
 	if err != nil {
 		panic(err.Error())
 	}
