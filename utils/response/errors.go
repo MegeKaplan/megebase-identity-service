@@ -24,7 +24,7 @@ var (
 	ErrEmailAlreadyExists = &AppError{
 		Code:       "EMAIL_EXISTS",
 		Message:    "Email already exists",
-		HTTPStatus: http.StatusBadRequest,
+		HTTPStatus: http.StatusConflict,
 	}
 
 	ErrInvalidCredentials = &AppError{
