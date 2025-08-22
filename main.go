@@ -10,6 +10,7 @@ import (
 	"github.com/MegeKaplan/megebase-identity-service/repositories"
 	"github.com/MegeKaplan/megebase-identity-service/services"
 	"github.com/MegeKaplan/megebase-identity-service/utils"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -23,6 +24,13 @@ func init() {
 
 func main() {
 	r := gin.Default()
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}))
 
 	db, err := database.ConnectPostgres()
 	if err != nil {
